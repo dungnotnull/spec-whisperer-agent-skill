@@ -1,0 +1,203 @@
+{
+  "skill_name": "spec-whisperer",
+  "version": "1.0.0",
+  "description": "Test cases for spec-whisperer skill. Covers trigger detection, ambiguity triage, question selection, spec generation, confidence scoring, and edge cases.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "vague-implementation-request",
+      "category": "TRIGGER_DETECTION",
+      "prompt": "build me a login page",
+      "expected": {
+        "trigger_type": "IMPLEMENT",
+        "missing_critical_count_min": 2,
+        "questions_count_min": 2,
+        "questions_count_max": 3,
+        "confidence_max": 65,
+        "domains_in_questions": ["acceptance_criteria", "auth_permissions"]
+      },
+      "assertions": [
+        {"id": "e1-1", "text": "Trigger is IMPLEMENT", "check": "trigger_type == 'IMPLEMENT'"},
+        {"id": "e1-2", "text": "At least 2 MISSING_CRITICAL clauses found", "check": "missing_critical_count >= 2"},
+        {"id": "e1-3", "text": "2-3 questions generated", "check": "2 <= questions_count <= 3"},
+        {"id": "e1-4", "text": "Confidence is below 65% (pre-answers)", "check": "confidence <= 65"},
+        {"id": "e1-5", "text": "acceptance_criteria domain in questions", "check": "'acceptance_criteria' in question_domains"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "specific-implementation-request",
+      "category": "HIGH_CONFIDENCE",
+      "prompt": "add a search bar to the products page that filters the product list as the user types, searching by product name only. The search should be client-side. Use React and Tailwind.",
+      "expected": {
+        "trigger_type": "IMPLEMENT",
+        "missing_critical_count_max": 1,
+        "questions_count_max": 2,
+        "confidence_min": 70,
+        "in_scope_contains": ["search input", "filter", "client-side"],
+        "tech_constraints_contains": ["React", "Tailwind"]
+      },
+      "assertions": [
+        {"id": "e2-1", "text": "Trigger is IMPLEMENT", "check": "trigger_type == 'IMPLEMENT'"},
+        {"id": "e2-2", "text": "At most 1 critical missing clause", "check": "missing_critical_count <= 1"},
+        {"id": "e2-3", "text": "Confidence is at least 70%", "check": "confidence >= 70"},
+        {"id": "e2-4", "text": "React detected in tech constraints", "check": "'React' in tech_constraints_text"},
+        {"id": "e2-5", "text": "Spec can be locked", "check": "can_lock == True"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "explain-request-skipped",
+      "category": "TRIGGER_SKIP",
+      "prompt": "explain how JWT authentication works",
+      "expected": {
+        "trigger_type": "SKIP"
+      },
+      "assertions": [
+        {"id": "e3-1", "text": "Trigger is SKIP for explain request", "check": "trigger_type == 'SKIP'"},
+        {"id": "e3-2", "text": "No spec generated", "check": "spec_markdown is None or trigger == 'SKIP'"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "debug-request-skipped",
+      "category": "TRIGGER_SKIP",
+      "prompt": "why is my login form not submitting?",
+      "expected": {
+        "trigger_type": "SKIP"
+      },
+      "assertions": [
+        {"id": "e4-1", "text": "Debug request is SKIP", "check": "trigger_type == 'SKIP'"},
+        {"id": "e4-2", "text": "No questions generated for SKIP", "check": "questions_count == 0"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "confidence-scoring-accuracy",
+      "category": "CONFIDENCE",
+      "prompt": "build me a dashboard",
+      "answers": {},
+      "expected": {
+        "confidence_max": 50,
+        "can_lock": false,
+        "blockers_count_min": 1
+      },
+      "assertions": [
+        {"id": "e5-1", "text": "Vague prompt has confidence <= 50%", "check": "confidence <= 50"},
+        {"id": "e5-2", "text": "Can_lock is False for low confidence", "check": "can_lock == False"},
+        {"id": "e5-3", "text": "At least 1 blocker listed", "check": "len(blockers) >= 1"}
+      ]
+    },
+    {
+      "id": 6,
+      "name": "confidence-improves-with-answers",
+      "category": "CONFIDENCE",
+      "prompt": "build me a login page",
+      "answers": {
+        "acceptance_criteria": "user can enter email and password, click login, and land on /dashboard",
+        "auth_permissions": "email and password only",
+        "scope_boundary": "just the login form, no signup or password reset"
+      },
+      "expected": {
+        "confidence_min": 70,
+        "can_lock": true,
+        "acceptance_criteria_count_min": 3
+      },
+      "assertions": [
+        {"id": "e6-1", "text": "Confidence >= 70% after answers provided", "check": "confidence >= 70"},
+        {"id": "e6-2", "text": "Can lock after answers", "check": "can_lock == True"},
+        {"id": "e6-3", "text": "At least 3 acceptance criteria generated", "check": "len(acceptance_criteria) >= 3"},
+        {"id": "e6-4", "text": "Goal sentence references login", "check": "'login' in goal.lower() or 'sign in' in goal.lower()"}
+      ]
+    },
+    {
+      "id": 7,
+      "name": "question-max-3-enforced",
+      "category": "QUESTION_LIMIT",
+      "prompt": "build the whole app including auth, payments, admin panel, user management, and reporting",
+      "expected": {
+        "trigger_type": "IMPLEMENT",
+        "questions_count_max": 3,
+        "is_multi_feature": true,
+        "confidence_max": 40
+      },
+      "assertions": [
+        {"id": "e7-1", "text": "Never more than 3 questions", "check": "questions_count <= 3"},
+        {"id": "e7-2", "text": "Multi-feature flag detected", "check": "is_multi_feature == True"},
+        {"id": "e7-3", "text": "Confidence very low for vague mega-request", "check": "confidence <= 40"}
+      ]
+    },
+    {
+      "id": 8,
+      "name": "acceptance-criteria-are-testable",
+      "category": "SPEC_QUALITY",
+      "prompt": "add a search bar to the products page",
+      "answers": {
+        "acceptance_criteria": "user types in search box and list filters to matching products",
+        "scope_boundary": "just the search input and client-side filtering"
+      },
+      "expected": {
+        "acceptance_criteria_has_verifiable_by": true,
+        "acceptance_criteria_count_min": 3,
+        "in_scope_count_min": 3,
+        "out_of_scope_count_min": 2
+      },
+      "assertions": [
+        {"id": "e8-1", "text": "All criteria contain 'verifiable by'", "check": "all('verifiable by' in c.lower() for c in acceptance_criteria)"},
+        {"id": "e8-2", "text": "At least 3 acceptance criteria", "check": "len(acceptance_criteria) >= 3"},
+        {"id": "e8-3", "text": "At least 3 in-scope items", "check": "len(in_scope) >= 3"},
+        {"id": "e8-4", "text": "At least 2 out-of-scope items", "check": "len(out_of_scope) >= 2"}
+      ]
+    },
+    {
+      "id": 9,
+      "name": "spec-save-and-load",
+      "category": "STORAGE",
+      "description": "Spec is saved to .specs/ after locking and can be found by keyword search",
+      "spec_input": {
+        "title": "Login Page with Email Auth",
+        "slug": "login-page-email-auth",
+        "confidence": 85,
+        "risk": "Medium",
+        "status": "LOCKED"
+      },
+      "expected": {
+        "file_saved": true,
+        "index_updated": true,
+        "findable_by": ["login", "auth", "email"],
+        "loadable_by_id": true
+      },
+      "assertions": [
+        {"id": "e9-1", "text": "Spec file created in .specs/", "check": "Path(saved_path).exists()"},
+        {"id": "e9-2", "text": "Index.json updated", "check": "spec_id in [e['id'] for e in index]"},
+        {"id": "e9-3", "text": "Findable by 'login' keyword", "check": "len(find_specs('login')) > 0"},
+        {"id": "e9-4", "text": "Loadable by spec ID", "check": "load_spec(spec_id) is not None"}
+      ]
+    },
+    {
+      "id": 10,
+      "name": "high-risk-auth-payment-detection",
+      "category": "RISK",
+      "prompt": "build a payment checkout flow with Stripe integration",
+      "expected": {
+        "trigger_type": "IMPLEMENT",
+        "risk": "High",
+        "questions_include_auth_or_security": true,
+        "confidence_score_notes_risk": true
+      },
+      "assertions": [
+        {"id": "e10-1", "text": "Risk is High for payment-related prompt", "check": "risk == 'High'"},
+        {"id": "e10-2", "text": "Trigger is IMPLEMENT", "check": "trigger_type == 'IMPLEMENT'"},
+        {"id": "e10-3", "text": "Questions address scope or success condition", "check": "any(q['domain'] in ('acceptance_criteria','scope_boundary','auth_permissions') for q in questions)"}
+      ]
+    }
+  ],
+  "test_utilities": {
+    "run_prompt_parser": "python skill/scripts/prompt_parser.py --text 'build me a login page' --summary",
+    "run_question_ranker": "python skill/scripts/question_ranker.py --clauses '[...]' --pretty",
+    "run_spec_generator": "python skill/scripts/spec_generator.py --prompt 'build search bar' --answers '{\"done\":\"list filters\"}' --markdown-only",
+    "run_spec_store_list": "python skill/scripts/spec_store.py --list",
+    "run_full_flow": "python skill/scripts/spec_whisperer.py --prompt 'build a login page' --skip-questions",
+    "run_interactive": "python skill/scripts/spec_whisperer.py --interactive"
+  }
+}

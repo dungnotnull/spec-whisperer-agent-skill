@@ -1,0 +1,121 @@
+{
+  "version": "1.0.0",
+  "thresholds": [
+    {
+      "min": 90,
+      "max": 100,
+      "label": "Excellent",
+      "badge": "🟢",
+      "risk_color": "green",
+      "agent_action": "lock_and_implement",
+      "message": "Excellent clarity. Ready to implement.",
+      "can_lock": true,
+      "show_blockers": false
+    },
+    {
+      "min": 75,
+      "max": 89,
+      "label": "Good",
+      "badge": "🟢",
+      "risk_color": "green",
+      "agent_action": "lock_and_implement_with_notes",
+      "message": "Good clarity. Note key assumptions before merging.",
+      "can_lock": true,
+      "show_blockers": false
+    },
+    {
+      "min": 60,
+      "max": 74,
+      "label": "Acceptable",
+      "badge": "🟡",
+      "risk_color": "yellow",
+      "agent_action": "lock_with_flags",
+      "message": "Acceptable clarity. Flag top assumptions for review.",
+      "can_lock": true,
+      "show_blockers": false
+    },
+    {
+      "min": 45,
+      "max": 59,
+      "label": "Marginal",
+      "badge": "🟠",
+      "risk_color": "orange",
+      "agent_action": "present_with_blockers",
+      "message": "Marginal clarity. Resolve at least one blocker before locking.",
+      "can_lock": true,
+      "show_blockers": true
+    },
+    {
+      "min": 30,
+      "max": 44,
+      "label": "Low",
+      "badge": "🔴",
+      "risk_color": "red",
+      "agent_action": "draft_only",
+      "message": "Low clarity. All critical blockers must be resolved before locking.",
+      "can_lock": false,
+      "show_blockers": true
+    },
+    {
+      "min": 0,
+      "max": 29,
+      "label": "Critical",
+      "badge": "🚨",
+      "risk_color": "critical",
+      "agent_action": "refuse_and_explain",
+      "message": "Too many unknowns. Cannot generate a useful spec. Please provide more detail.",
+      "can_lock": false,
+      "show_blockers": true
+    }
+  ],
+  "deductions": {
+    "missing_critical_per_item": 20,
+    "missing_critical_cap": 60,
+    "ambiguous_per_item": 8,
+    "ambiguous_cap": 32,
+    "no_acceptance_criteria": 15,
+    "untestable_acceptance_criteria": 10,
+    "only_one_criterion": 5,
+    "no_done_condition": 20,
+    "scope_undefined": 15,
+    "scope_too_large": 8,
+    "multiple_features_bundled": 12,
+    "tech_stack_unknown": 10,
+    "codebase_pattern_unknown": 5,
+    "integration_point_unknown": 15,
+    "auth_requirement_unspecified": 10
+  },
+  "bonuses": {
+    "user_provided_examples": 5,
+    "codebase_context_available": 8,
+    "all_questions_answered": 10,
+    "two_of_three_answered": 6,
+    "user_provided_acceptance_criteria": 8,
+    "similar_feature_exists": 5,
+    "small_bounded_scope": 5,
+    "bonus_cap": 30
+  },
+  "risk_domains": {
+    "high": [
+      "auth", "security", "authentication", "authorization", "password",
+      "payment", "billing", "invoice", "stripe", "subscription",
+      "migration", "schema", "database migration",
+      "delete", "purge", "destroy",
+      "permission", "role", "access control"
+    ],
+    "medium": [
+      "api", "endpoint", "integration", "webhook",
+      "data model", "entity", "relationship",
+      "multi-user", "concurrent", "race condition",
+      "performance", "cache", "rate limit",
+      "external service", "third-party"
+    ],
+    "low": [
+      "ui", "component", "layout", "style", "css",
+      "text", "copy", "label", "placeholder",
+      "tooltip", "animation", "transition",
+      "static", "display only", "read only",
+      "dev tool", "script", "utility"
+    ]
+  }
+}
